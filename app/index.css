@@ -194,3 +194,26 @@ body {
   color: #8a6a5a;
   margin-bottom: 20px;
 }
+
+.start-card {
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.start-card h1 {
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+
+.start-lead {
+  font-weight: 700;
+  color: #7a1f2b;
+  margin: 0 0 16px;
+}
+
+.start-desc {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #4a362c;
+  margin: 0 0 28px;
+}

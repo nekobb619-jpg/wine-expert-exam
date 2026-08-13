@@ -18,20 +18,30 @@ function buildOptions(q: Question) {
 }
 
 export default function App() {
-  const [order] = useState(() => shuffle(questionsData.map((_, i) => i)));
+  const [started, setStarted] = useState(false);
+  const [order, setOrder] = useState<number[]>([]);
   const [pos, setPos] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [finished, setFinished] = useState(false);
 
-  const question = questionsData[order[pos]];
-  const options = useMemo(() => buildOptions(question), [question]);
+  function handleStart() {
+    setOrder(shuffle(questionsData.map((_, i) => i)));
+    setPos(0);
+    setSelected(null);
+    setScore({ correct: 0, total: 0 });
+    setFinished(false);
+    setStarted(true);
+  }
+
+  const question = started ? questionsData[order[pos]] : null;
+  const options = useMemo(() => (question ? buildOptions(question) : []), [question]);
 
   const isAnswered = selected !== null;
-  const isCorrect = selected === question.correctOption;
+  const isCorrect = question !== null && selected === question.correctOption;
 
   function handleAnswer(option: string) {
-    if (isAnswered) return;
+    if (isAnswered || !question) return;
     setSelected(option);
     setScore((s) => ({
       correct: s.correct + (option === question.correctOption ? 1 : 0),
@@ -49,7 +59,25 @@ export default function App() {
   }
 
   function handleRestart() {
-    window.location.reload();
+    setStarted(false);
+    setFinished(false);
+  }
+
+  if (!started) {
+    return (
+      <div className="app">
+        <div className="card start-card">
+          <h1>ワインエキスパート一次試験</h1>
+          <p className="start-lead">直前対策 確かめ問題(4択・全{questionsData.length}問)</p>
+          <p className="start-desc">
+            幹(基礎)・枝(対比)・葉(数値・シノニム)の3レベルから出題します。回答するとその場で正誤判定と解説が表示され、続けて次の問題に進めます。
+          </p>
+          <button className="btn primary" onClick={handleStart}>
+            開始する
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (finished) {
@@ -67,6 +95,10 @@ export default function App() {
         </div>
       </div>
     );
+  }
+
+  if (!question) {
+    return null;
   }
 
   return (
