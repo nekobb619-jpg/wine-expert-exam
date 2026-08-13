@@ -72,6 +72,15 @@ export default function App() {
     setFinished(false);
   }
 
+  function handleBackToTitle() {
+    if (pos > 0 || score.total > 0) {
+      if (!window.confirm('タイトルに戻ります。ここまでの回答結果は破棄されますが、よろしいですか？')) {
+        return;
+      }
+    }
+    handleRestart();
+  }
+
   if (!mode) {
     return (
       <div className="app">
@@ -125,6 +134,9 @@ export default function App() {
   return (
     <div className="app">
       <header className="header">
+        <button className="back-to-title" onClick={handleBackToTitle}>
+          ← タイトルに戻る
+        </button>
         <span className="progress">
           <span className={`mode-tag ${mode === 'advanced' ? 'mode-tag-advanced' : ''}`}>
             {mode === 'advanced' ? '本番対応' : 'スタンダード'}
