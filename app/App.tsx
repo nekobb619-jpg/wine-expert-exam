@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
 import { questionsData } from './data/questions';
+import { questionsAdvancedData } from './data/questionsAdvanced';
 import type { Question } from './types';
+
+type Mode = 'standard' | 'advanced';
 
 function shuffle<T>(arr: T[]): T[] {
   const copy = [...arr];
@@ -17,24 +20,30 @@ function buildOptions(q: Question) {
   return shuffle([q.correctOption, ...q.wrongOptions]);
 }
 
+function questionsFor(mode: Mode): Question[] {
+  return mode === 'advanced' ? questionsAdvancedData : questionsData;
+}
+
 export default function App() {
-  const [started, setStarted] = useState(false);
+  const [mode, setMode] = useState<Mode | null>(null);
   const [order, setOrder] = useState<number[]>([]);
   const [pos, setPos] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [finished, setFinished] = useState(false);
 
-  function handleStart() {
-    setOrder(shuffle(questionsData.map((_, i) => i)));
+  const pool = mode ? questionsFor(mode) : [];
+
+  function handleStart(nextMode: Mode) {
+    setOrder(shuffle(questionsFor(nextMode).map((_, i) => i)));
     setPos(0);
     setSelected(null);
     setScore({ correct: 0, total: 0 });
     setFinished(false);
-    setStarted(true);
+    setMode(nextMode);
   }
 
-  const question = started ? questionsData[order[pos]] : null;
+  const question = mode ? pool[order[pos]] : null;
   const options = useMemo(() => (question ? buildOptions(question) : []), [question]);
 
   const isAnswered = selected !== null;
@@ -59,22 +68,33 @@ export default function App() {
   }
 
   function handleRestart() {
-    setStarted(false);
+    setMode(null);
     setFinished(false);
   }
 
-  if (!started) {
+  if (!mode) {
     return (
       <div className="app">
         <div className="card start-card">
           <h1>ワインエキスパート一次試験</h1>
-          <p className="start-lead">直前対策 確かめ問題(4択・全{questionsData.length}問)</p>
+          <p className="start-lead">直前対策 確かめ問題(4択)</p>
           <p className="start-desc">
             幹(基礎)・枝(対比)・葉(数値・シノニム)の3レベルから出題します。回答するとその場で正誤判定と解説が表示され、続けて次の問題に進めます。
           </p>
-          <button className="btn primary" onClick={handleStart}>
-            開始する
-          </button>
+          <div className="mode-select">
+            <button className="mode-card" onClick={() => handleStart('standard')}>
+              <span className="mode-name">スタンダードモード</span>
+              <span className="mode-count">全{questionsData.length}問</span>
+              <span className="mode-desc">基礎固め・幅広い頻出テーマの確認に</span>
+            </button>
+            <button className="mode-card mode-card-advanced" onClick={() => handleStart('advanced')}>
+              <span className="mode-name">本番対応モード</span>
+              <span className="mode-count">全{questionsAdvancedData.length}問</span>
+              <span className="mode-desc">
+                精緻な数値・紛らわしい選択肢・マイナー地域・横断リンク問題で本番CBTレベルに近づけた上級セット
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -85,12 +105,13 @@ export default function App() {
       <div className="app">
         <div className="card result-card">
           <h1>お疲れさまでした</h1>
+          <p className="result-mode">{mode === 'advanced' ? '本番対応モード' : 'スタンダードモード'}</p>
           <p className="result-score">
             {score.correct} / {score.total} 問正解
           </p>
           <p className="result-rate">正答率 {Math.round((score.correct / score.total) * 100)}%</p>
           <button className="btn primary" onClick={handleRestart}>
-            もう一度挑戦する
+            モードを選び直す
           </button>
         </div>
       </div>
@@ -105,6 +126,9 @@ export default function App() {
     <div className="app">
       <header className="header">
         <span className="progress">
+          <span className={`mode-tag ${mode === 'advanced' ? 'mode-tag-advanced' : ''}`}>
+            {mode === 'advanced' ? '本番対応' : 'スタンダード'}
+          </span>
           第{pos + 1}問 / {order.length}問
         </span>
         <span className="score">
